@@ -1,3 +1,31 @@
-# glucotrack
+# 🩸 GlucoTrack - Diabetes Self-Management App
 
-A new Flutter project.
+> 🚧 **Status:** Work in Progress / Under Development
+
+**GlucoTrack** is a cross-platform mobile application built with **Flutter & Dart** designed to support individuals with diabetes in managing their health effectively.
+
+---
+
+### ✨ Features
+* 📊 **Blood Glucose Tracking:** Record, store, and visualize blood glucose data seamlessly.
+* 💡 **Personalized Recommendations:** Logic-driven insights based on daily user inputs.
+* 🔔 **Push Notifications:** Reminders for tracking readings and maintaining consistency.
+* 🎨 **Clean UI/UX:** User-friendly and accessible health monitoring interface.
+
+---
+
+### 🛠️ Tech Stack & Tools
+* **Framework:** Flutter
+* **Language:** Dart
+* **Backend & Services:** Firebase
+* **Tools:** VS Code, Git & GitHub
+
+---
+
+### 🚀 Getting Started
+
+To run this project locally:
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/haneenmo28/GlucoTrack.git](https://github.com/haneenmo28/GlucoTrack.git)
