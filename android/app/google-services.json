@@ -1,0 +1,50 @@
+{
+  "project_info": {
+    "project_number": "116290014601",
+    "project_id": "gluco-tracker-pro-eg",
+    "storage_bucket": "gluco-tracker-pro-eg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:116290014601:android:b34ba793e62966136d6558",
+        "android_client_info": {
+          "package_name": "com.hanin.glucotrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "116290014601-onvn7ojuh1b4a8clr3huibms7qs5lmi5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hanin.glucotrack",
+            "certificate_hash": "bde429833022563bc678e6ed0c85f20b46860529"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKCPXRpS9ej4R6L14F6HzONGnCMD8d3_Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "116290014601-cj98pg1q2lkefbn2nvi4obsbmm088u97.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "116290014601-66s915m21rrlocl20ph3r8cjb6ro0n33.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "gluco.tracker.pro.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
