@@ -1,4 +1,11 @@
 <p align="center">
+  <a href="https://github.com/haneenmo28/GlucoTrack/releases/latest">
+    <img src="https://img.shields.io/badge/Download-APK%20v1.0.0--beta-brightgreen?style=for-the-badge&logo=android" alt="Download APK" />
+  </a>
+</p>
+
+
+<p align="center">
   <img src="https://img.shields.io/badge/Status-Under--Development-orange?style=for-the-badge&logo=git" alt="Status" />
 </p>
 
