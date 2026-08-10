@@ -1,8 +1,21 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Under--Development-orange?style=for-the-badge&logo=git" alt="Status" />
+</p>
+
 # 🩸 GlucoTrack - Diabetes Self-Management App
 
-> 🚧 **Status:** Work in Progress / Under Development
-
 **GlucoTrack** is a cross-platform mobile application built with **Flutter & Dart** designed to support individuals with diabetes in managing their health effectively.
+
+---
+
+### 🚧 Development Status & Roadmap
+
+- [x] Basic UI/UX Setup & Screen Navigation
+- [x] Blood Glucose Data Recording & Local Storage
+- [x] Data Visualization & Charts
+- [ ] Firebase Backend Integration
+- [ ] Push Notifications for Reminders
+- [ ] Personalized Recommendation Logic
 
 ---
 
