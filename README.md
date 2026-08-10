@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/haneenmo28/GlucoTrack/releases/latest">
-    <img src="https://img.shields.io/badge/Download-APK%20v1.0.0--beta-brightgreen?style=for-the-badge&logo=android" alt="Download APK" />
+  <a href="https://github.com/haneenmo28/GlucoTrack/releases/download/v1.0.0-beta/app-release.apk">
+    <img src="https://img.shields.io/badge/Download-APK%20Direct-brightgreen?style=for-the-badge&logo=android" alt="Download APK" />
   </a>
 </p>
 
