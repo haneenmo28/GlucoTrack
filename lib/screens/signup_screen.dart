@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'caregiver_home_screen.dart';
 
-// توحيد كلاس الصور لضمان صحة المسارات (بإضافة كلمة images)
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -18,7 +18,9 @@ class AppImages {
 }
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String role;
+
+  const SignUpScreen({super.key, required this.role});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -36,7 +38,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     scopes: ['email', 'https://www.googleapis.com/auth/userinfo.profile'],
   );
 
-  // تحسين الأداء: تحميل الصور في الميموري مسبقاً لمنع الـ Skipped Frames
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -44,7 +45,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     precacheImage(const AssetImage(AppImages.logoDark), context);
   }
 
-  // ميثود جوجل
   Future<void> _signUpWithGoogle() async {
     setState(() => _isLoading = true);
     try {
@@ -64,33 +64,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-      if (userCredential.additionalUserInfo!.isNewUser) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
-          'name': userCredential.user!.displayName,
-          'email': userCredential.user!.email,
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'name': userCredential.user!.displayName,
+        'email': userCredential.user!.email,
+        'role': widget.role, // 💡 حفظنا نوع الحساب هنا
+        if (userCredential.additionalUserInfo!.isNewUser)
           'createdAt': FieldValue.serverTimestamp(),
+        if (widget.role == 'patient' &&
+            userCredential.additionalUserInfo!.isNewUser)
           'diabetesType': 'Type 1',
-        });
-      }
+      }, SetOptions(merge: true));
 
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      if (mounted) {
+        if (widget.role == 'caregiver') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => const CaregiverHomeScreen()));
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
     } on PlatformException catch (e) {
       String userMessage = 'error'.tr();
-      if (e.code == '10')
+      if (e.code == '10') {
         userMessage =
             "مشكلة في الربط (Error 10): تأكدي من إضافة إيميلك في الـ Test Users.";
-      if (mounted)
+      }
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(userMessage)));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ميثود التسجيل العادي
   Future<void> _handleSignUp() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
@@ -106,15 +116,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set({
         'name': _nameController.text.trim(),
         'email': _emailController.text.trim(),
+        'role': widget.role,
         'createdAt': FieldValue.serverTimestamp(),
       });
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+
+      if (mounted) {
+        if (widget.role == 'caregiver') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => const CaregiverHomeScreen()));
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
     } on FirebaseAuthException catch (e) {
       String errorMsg = 'error'.tr();
       if (e.code == 'weak-password') errorMsg = 'weak_password_msg'.tr();
@@ -140,7 +160,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Column(
                 children: [
                   Image.asset(
-                    // تم تعديل المسار ليستخدم الكلاس الموحد (حل مشكلة File not found)
                     AppImages.getLogo(context),
                     width: 300,
                     fit: BoxFit.contain,
@@ -208,8 +227,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-
-                  // زرار جوجل (استخدام اللوجو من الكلاس الموحد برضه عشان نضمن المسار)
                   OutlinedButton(
                     onPressed: _isLoading ? null : _signUpWithGoogle,
                     style: OutlinedButton.styleFrom(
@@ -228,10 +245,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset(
-                          AppImages
-                              .googleLogo, // تأكد من إضافة اللوجو في الكلاس الموحد
-                          height:
-                              65, // صغرنا الحجم شوية عشان يبان إنه أيقونة جوه زرار
+                          AppImages.googleLogo,
+                          height: 65,
                           fit: BoxFit.contain,
                         ),
                         const SizedBox(width: 10),
@@ -251,7 +266,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-          // أزرار اللغة والرجوع
           Positioned(
               top: 50,
               left: context.locale == const Locale('ar') ? null : 15,

@@ -6,11 +6,9 @@ import '../services/firebase_service.dart';
 import '../models/reading_model.dart';
 
 class AppImages {
-  // هنا المسارات معرفة بكلمة images
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
 
-  // ميثود ذكية بتختار اللوجو بناءً على الثيم
   static String getLogo(BuildContext context) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark ? logoDark : logoLight;
@@ -32,13 +30,10 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
   bool _isSaving = false;
   bool _isFasting = true;
 
-  get AppConstants => null;
 
-  // --- إضافة لتحسين الأداء ومنع الـ Lag ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // تحميل الصور في الذاكرة مسبقاً لمنع الـ Skipped Frames
     precacheImage(const AssetImage(AppImages.logoLight), context);
     precacheImage(const AssetImage(AppImages.logoDark), context);
   }
@@ -63,7 +58,7 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
         glucoseLevel: double.parse(_levelController.text),
         timestamp: DateTime.now(),
         note: _noteController.text,
-        isFasting: _isFasting,
+        isFasting: _isFasting, 
       );
 
       try {
@@ -92,6 +87,13 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
   }
 
   @override
+  void dispose() {
+    _levelController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -114,13 +116,11 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
         children: [
           Center(
             child: Opacity(
-              opacity: isDark ? 0.20 : 0.20,
+              opacity: 0.20,
               child: Image.asset(
-                // تم التعديل هنا لاستخدام كلاس AppImages لضمان صحة المسار
                 AppImages.getLogo(context),
                 width: 250,
                 fit: BoxFit.contain,
-                // إضافة معالجة في حالة فشل التحميل لضمان عدم توقف البرنامج
                 errorBuilder: (context, error, stackTrace) {
                   return const SizedBox();
                 },
@@ -214,7 +214,7 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
                       filled: true,
                       fillColor: isDark
                           ? const Color(0xFF1E1E1E)
-                          : Colors.grey[50]!.withOpacity(0.8),
+                          : Colors.grey[300]!.withValues(alpha: 0.1),
                     ),
                     validator: (value) =>
                         value!.isEmpty ? 'select_condition'.tr() : null,
@@ -239,7 +239,7 @@ class _AddReadingScreenState extends State<AddReadingScreen> {
                       filled: true,
                       fillColor: isDark
                           ? const Color(0xFF1E1E1E)
-                          : Colors.grey[50]!.withOpacity(0.8),
+                          : Colors.grey[300]!.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 40),

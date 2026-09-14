@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../services/pdf_service.dart';
 
-// توحيد كلاس الصور لضمان صحة المسارات (بإضافة كلمة images)
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -24,7 +24,6 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // تحسين الأداء: تحميل الصور في الذاكرة مسبقاً لمنع الـ Skipped Frames
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -52,6 +51,58 @@ class _ReportsScreenState extends State<ReportsScreen> {
     } else {
       if (avg >= 80 && avg <= 130) return "type2_perfect_plan".tr();
       return "type2_warning_plan".tr();
+    }
+  }
+
+  Future<void> _exportPdfReport(String? uid) async {
+    if (uid == null) return;
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final userData = userDoc.data() ?? {};
+
+    final readingsSnapshot = await FirebaseFirestore.instance
+        .collection('readings')
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    List<Map<String, dynamic>> exportData = readingsSnapshot.docs.map((doc) {
+      final data = doc.data();
+      final level = (data['glucoseLevel'] as num?)?.toDouble() ?? 0.0;
+
+      String dateStr = data['date']?.toString() ?? '';
+      String timeStr = data['time']?.toString() ?? '';
+
+      if (dateStr.isEmpty && data['timestamp'] != null) {
+        DateTime dt = (data['timestamp'] as Timestamp).toDate();
+        dateStr =
+            "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
+        timeStr =
+            "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+      }
+
+      String status = 'Normal';
+      if (level > 180) {
+        status = 'High';
+      } else if (level < 70) {
+        status = 'Low';
+      }
+
+      return {
+        'date': dateStr.isNotEmpty ? dateStr : 'N/A',
+        'time': timeStr.isNotEmpty ? timeStr : 'N/A',
+        'value': level,
+        'status': status,
+        'isFasting': doc.data()['isFasting'], // 💡 هو ده السطر الصح!
+      };
+    }).toList();
+
+    if (mounted) {
+      await PdfReportService.generateAndShareReport(
+        userData: userData,
+        readings: exportData,
+        langCode: context.locale.languageCode, // تم إضافة اللغات المفقودة هنا
+      );
     }
   }
 
@@ -113,8 +164,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.mounted) Navigator.pop(context);
+          },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+            tooltip: 'تصدير تقرير PDF',
+            onPressed: () => _exportPdfReport(user?.uid),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -122,11 +182,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
             child: Opacity(
               opacity: isDark ? 0.4 : 0.6,
               child: Image.asset(
-                // تم تعديل المسار لاستخدام الكلاس الموحد (بكلمة images)
                 AppImages.getLogo(context),
                 width: 300,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
             ),
           ),
@@ -203,21 +263,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: Colors.amber.withOpacity(isDark ? 0.3 : 0.5), width: 1.5),
+            color: Colors.amber.withValues(alpha: isDark ? 0.3 : 0.5),
+            width: 1.5),
         boxShadow: isDark
-            ? []
+            ? const []
             : [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
               ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.2),
+                    color: Colors.amber.withValues(alpha: 0.2),
                     shape: BoxShape.circle),
                 child: const Icon(Icons.assignment_turned_in_rounded,
                     color: Colors.orange, size: 20),
@@ -265,7 +328,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 5))
         ],
@@ -342,17 +405,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(25),
           boxShadow: isDark
-              ? []
+              ? const []
               : [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10)
                 ]),
       child: Row(
         children: [
           CircleAvatar(
               radius: 30,
               backgroundColor: isDark
-                  ? Colors.blue.withOpacity(0.1)
+                  ? Colors.blue.withValues(alpha: 0.1)
                   : const Color(0xFFE3F2FD),
               child: Icon(
                   type == 'Type 1'

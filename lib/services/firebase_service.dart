@@ -6,16 +6,12 @@ class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // إضافة قراءة جديدة
   Future<void> addReading(ReadingModel reading) async {
     try {
       final String? userId = _auth.currentUser?.uid;
 
       if (userId != null) {
-        // بنستخدم الـ toMap اللي جوه الموديل عشان نضمن تنسيق الداتا صح
         Map<String, dynamic> data = reading.toMap();
-
-        // تأكيد إن الـ userId مبعوث مع الداتا
         data['userId'] = userId;
 
         await _firestore.collection('readings').add(data);
@@ -28,7 +24,6 @@ class FirebaseService {
     }
   }
 
-  // جلب القراءات الخاصة بالمستخدم الحالي فقط
   Stream<List<ReadingModel>> getReadings() {
     final String? userId = _auth.currentUser?.uid;
 
@@ -47,13 +42,11 @@ class FirebaseService {
         return ReadingModel.fromMap(data, doc.id);
       }).toList();
     }).handleError((error) {
-      // حطينا دي عشان لو الفايربيز طلب Index يطلعلك رسالة واضحة في الـ Console
       print("Firestore Error: $error");
       return <ReadingModel>[];
     });
   }
 
-  // وظيفة حذف قراءة معينة باستخدام الـ ID الخاص بها
   Future<void> deleteReading(String docId) async {
     try {
       await _firestore.collection('readings').doc(docId).delete();

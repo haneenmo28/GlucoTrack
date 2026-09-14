@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ReadingModel {
   final String? id;
-  final double glucoseLevel; // ده اللي بنستخدمه للقيمة
-  final DateTime timestamp; // ده اللي بنستخدمه للتاريخ
+  final double glucoseLevel; 
+  final DateTime timestamp; 
   final String note;
   final String? userId;
   final bool isFasting;
@@ -36,7 +36,7 @@ class ReadingModel {
     return {
       'glucoseLevel': glucoseLevel,
       'timestamp':
-          Timestamp.fromDate(timestamp), // تحويل لـ Timestamp عشان فايربيز
+          Timestamp.fromDate(timestamp), 
       'note': note,
       'userId': userId,
       'isFasting': isFasting,

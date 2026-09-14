@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'role_selection_screen.dart';
+import 'caregiver_home_screen.dart';
 
-// توحيد كلاس الصور لضمان صحة المسارات (بإضافة كلمة images)
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -30,7 +32,6 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  // تحسين الأداء: تحميل اللوجوهات في الميموري فوراً عند فتح التطبيق
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -38,13 +39,38 @@ class _SplashScreenState extends State<SplashScreen> {
     precacheImage(const AssetImage(AppImages.logoDark), context);
   }
 
-  void _checkUserStatus() {
+  Future<void> _checkUserStatus() async {
     final user = FirebaseAuth.instance.currentUser;
+
     if (mounted) {
       if (user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+          if (mounted) {
+            if (doc.exists && doc.data()!.containsKey('role')) {
+              final role = doc.get('role');
+              if (role == 'caregiver') {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const CaregiverHomeScreen()));
+              } else {
+                Navigator.pushReplacementNamed(context, '/home');
+              }
+            } else {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          }
+        } catch (e) {
+          if (mounted) Navigator.pushReplacementNamed(context, '/home');
+        }
       } else {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (_) => const RoleSelectionScreen()));
       }
     }
   }
@@ -52,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // لون الخلفية ثابت حسب تصميمك (كحلي غامق)
       backgroundColor: const Color.fromARGB(255, 6, 0, 59),
       body: Center(
         child: Column(
@@ -61,11 +86,9 @@ class _SplashScreenState extends State<SplashScreen> {
             Hero(
               tag: 'logo',
               child: Image.asset(
-                // تم تعديل المسار باستخدام الميثود الموحدة
                 AppImages.getLogo(context),
                 width: 220,
                 fit: BoxFit.contain,
-                // أمان إضافي لمنع الـ Crash
                 errorBuilder: (context, error, stackTrace) =>
                     const SizedBox(height: 220),
               ),

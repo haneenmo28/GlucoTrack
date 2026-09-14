@@ -5,8 +5,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-// توحيد كلاس الصور لضمان صحة المسارات
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -41,16 +43,137 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchUserData();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    precacheImage(const AssetImage(AppImages.logoLight), context);
-    precacheImage(const AssetImage(AppImages.logoDark), context);
+  Future<void> _generateAndShowLinkCode() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      String linkCode = '';
+
+      if (doc.exists && doc.data()!.containsKey('linkCode')) {
+        linkCode = doc.data()!['linkCode'];
+      } else {
+        final random = Random();
+        linkCode = (100000 + random.nextInt(900000)).toString();
+
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'linkCode': linkCode,
+        }, SetOptions(merge: true));
+      }
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      _showCodeDialog(linkCode);
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ، حاول مرة أخرى')));
+    }
+  }
+
+  void _showCodeDialog(String code) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = context.locale.languageCode;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1F1F1F) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          lang == 'ar' ? 'كود الربط الخاص بك' : 'Your Link Code',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                lang == 'ar'
+                    ? 'أعط هذا الكود لمرافقك أو دعه يمسح الرمز ليتمكن من المتابعة.'
+                    : 'Give this code to your caregiver or let them scan the QR.',
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black26 : Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.teal.withOpacity(0.5)),
+                ),
+                child: Text(
+                  code,
+                  style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                      color: Colors.teal),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: 160,
+                height: 160,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.teal.shade200, width: 2),
+                ),
+                child: QrImageView(
+                  data: code,
+                  version: QrVersions.auto,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: code));
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(lang == 'ar'
+                      ? 'تم نسخ الكود بنجاح!'
+                      : 'Code copied successfully!'),
+                  backgroundColor: Colors.teal,
+                ),
+              );
+            },
+            icon: const Icon(Icons.copy, color: Colors.white),
+            label: Text(lang == 'ar' ? 'نسخ الكود' : 'Copy Code',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showChangePasswordDialog() {
-    final TextEditingController _newPasswordController =
-        TextEditingController();
+    final TextEditingController newPasswordController = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
@@ -63,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87)),
         content: TextField(
-          controller: _newPasswordController,
+          controller: newPasswordController,
           obscureText: true,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration: InputDecoration(
@@ -83,14 +206,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 6, 0, 59)),
             onPressed: () async {
-              if (_newPasswordController.text.length < 6) {
+              if (newPasswordController.text.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('weak_password_msg'.tr())));
                 return;
               }
               try {
                 await FirebaseAuth.instance.currentUser!
-                    .updatePassword(_newPasswordController.text);
+                    .updatePassword(newPasswordController.text);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('password_changed_success'.tr())));
@@ -109,29 +232,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _fetchUserData() async {
     setState(() => _isLoading = true);
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        _nameController.text = data['name'] ?? '';
-        _ageController.text = (data['age'] ?? '').toString();
-        _weightController.text = (data['weight'] ?? '').toString();
-        _diagnosisYearController.text =
-            (data['diagnosisYear'] ?? '').toString();
-        setState(() {
-          _diabetesType = data['diabetesType'] ?? 'Type 1';
-          _treatmentType = data['treatmentType'] ?? 'حبوب';
-          _isEditMode = false;
-        });
-      } else {
-        setState(() => _isEditMode = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          _nameController.text = data['name'] ?? '';
+          _ageController.text = (data['age'] ?? '').toString();
+          _weightController.text = (data['weight'] ?? '').toString();
+          _diagnosisYearController.text =
+              (data['diagnosisYear'] ?? '').toString();
+
+          if (mounted) {
+            setState(() {
+              _diabetesType = data['diabetesType'] ?? 'Type 1';
+              _treatmentType = data['treatmentType'] ?? 'حبوب';
+              _isEditMode = false;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _isEditMode = true);
+        }
       }
+    } catch (e) {
+      debugPrint("Error fetching data: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   Future<void> _saveProfile() async {
@@ -178,8 +309,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (confirm == true) {
       await FirebaseAuth.instance.signOut();
-      if (mounted)
+      if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      }
     }
   }
 
@@ -210,7 +342,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: Colors.teal,
+                    strokeWidth: 4,
+                  ),
+                  SizedBox(height: 20),
+                  Text('جاري التحميل...',
+                      style: TextStyle(
+                          color: Colors.teal,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            )
           : Stack(
               children: [
                 Center(
@@ -242,7 +390,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _buildThemeSwitch(context),
                               const SizedBox(height: 15),
                               _buildPasswordTile(context),
+                              const SizedBox(height: 15),
+                              _buildLinkCodeTile(context),
                             ],
+                            const SizedBox(height: 15),
                             Text(
                               _isEditMode ? "edit".tr() : "report".tr(),
                               style: TextStyle(
@@ -291,6 +442,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildLinkCodeTile(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = context.locale.languageCode;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+              ],
+      ),
+      child: ListTile(
+        leading:
+            const Icon(Icons.qr_code_2_rounded, color: Colors.teal, size: 28),
+        title: Text(lang == 'ar' ? 'كود الربط للمرافق' : 'Caregiver Link Code',
+            style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold)),
+        trailing: Icon(Icons.arrow_forward_ios,
+            size: 16, color: isDark ? Colors.white54 : Colors.grey),
+        onTap: _generateAndShowLinkCode,
+      ),
+    );
+  }
+
   Widget _buildThemeSwitch(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -314,7 +493,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         trailing: Switch(
           value: isDark,
-          activeColor: Colors.amber,
+          activeThumbColor: Colors.amber,
           onChanged: (value) {
             Provider.of<ThemeProvider>(context, listen: false)
                 .toggleTheme(value);
@@ -370,10 +549,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final prefs = await SharedPreferences.getInstance();
           if (context.locale == const Locale('ar')) {
             context.setLocale(const Locale('en'));
-            await prefs.setString('language_code', 'en'); // حفظ اللغة "إنجليزي"
+            await prefs.setString('language_code', 'en');
           } else {
             context.setLocale(const Locale('ar'));
-            await prefs.setString('language_code', 'ar'); // حفظ اللغة "عربي"
+            await prefs.setString('language_code', 'ar');
           }
         },
       ),

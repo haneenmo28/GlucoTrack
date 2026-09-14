@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../services/firebase_service.dart';
 import '../models/reading_model.dart';
 
-// توحيد كلاس الصور لضمان عدم حدوث خطأ في المسارات
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -25,7 +23,6 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final FirebaseService _firebaseService = FirebaseService();
 
-  // تحسين الأداء: تحميل الصور في ذاكرة الموبايل مسبقاً
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -150,8 +147,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   return Dismissible(
                     key: Key(reading.id ?? index.toString()),
                     direction: DismissDirection.endToStart,
-
-                    // --- إضافة رسالة تأكيد الحذف ---
                     confirmDismiss: (direction) async {
                       return await showDialog(
                         context: context,
@@ -198,8 +193,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         },
                       );
                     },
-                    // ----------------------------
-
                     background: Container(
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 20),

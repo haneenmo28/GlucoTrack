@@ -5,7 +5,6 @@ import '../services/firebase_service.dart';
 import '../models/reading_model.dart';
 import 'package:intl/intl.dart';
 
-// كلاس الصور لتوحيد المسارات ومنع أخطاء الـ "File not found"
 class AppImages {
   static const String logoLight = 'assets/images/logo_light.png';
   static const String logoDark = 'assets/images/logo_dark.png';
@@ -65,9 +64,7 @@ class _GraphScreenState extends State<GraphScreen> {
               child: Text(
                 'random'.tr(),
                 style: TextStyle(
-                    color: isDark
-                        ? Colors.white70
-                        : Colors.black54, // تعديل بسيط لضمان الرؤية
+                    color: isDark ? Colors.white70 : Colors.black54,
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
               ),
@@ -84,7 +81,6 @@ class _GraphScreenState extends State<GraphScreen> {
           return Padding(
             padding: const EdgeInsets.all(20.0),
             child: SingleChildScrollView(
-              // إضافة لضمان عدم حدوث Overflow في الشاشات الصغيرة
               child: Column(
                 children: [
                   const SizedBox(height: 20),
@@ -134,8 +130,10 @@ class _GraphScreenState extends State<GraphScreen> {
                                     reservedSize: 30,
                                     getTitlesWidget: (value, meta) {
                                       int index = value.toInt();
-                                      if (index < 0 || index >= readings.length)
+                                      if (index < 0 ||
+                                          index >= readings.length) {
                                         return const SizedBox();
+                                      }
                                       return SideTitleWidget(
                                         axisSide: meta.axisSide,
                                         child: Text(
@@ -216,7 +214,6 @@ class _GraphScreenState extends State<GraphScreen> {
                   const SizedBox(height: 30),
                   Center(
                     child: Image.asset(
-                      // تم التعديل هنا لاستخدام المسار الصحيح من الكلاس
                       AppImages.getLogo(context),
                       width: 200,
                       fit: BoxFit.contain,

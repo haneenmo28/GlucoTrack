@@ -19,10 +19,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    // ✨ حدثنا AGP لـ 8.6.0 عشان يوافق جافا 21 ويشيل إيرور الـ firebase_core
-    id("com.android.application") version "8.6.0" apply false 
-    // ✨ حدثنا الكوتلن لـ 2.1.0 عشان التحذير اللي ظهر لك يختفي
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("com.android.application") version "9.0.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
 
 include(":app")

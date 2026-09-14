@@ -13,7 +13,6 @@ import 'screens/home_screen.dart';
 import 'screens/add_reading.dart';
 import 'screens/history_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/graph_screen.dart';
 import 'screens/reports_screen.dart';
@@ -145,7 +144,6 @@ class GlucoTrackApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
-        '/signup': (context) => const SignUpScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
         '/add': (context) => const AddReadingScreen(),
