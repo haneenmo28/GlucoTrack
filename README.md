@@ -1,7 +1,7 @@
 # GlucoTrack — Diabetes Self-Management App 🩸
 
 <p align="center">
-  <a href="Download GlucoTrack APK">
+  <a href="https://github.com/haneenmo28/GlucoTrack/releases/download/v1.0.0-beta/GlucoTrack.apk">
     <img src="https://img.shields.io/badge/Download-APK%20Direct-brightgreen?style=for-the-badge&logo=android" alt="Download APK" />
   </a>
 </p>
@@ -281,7 +281,7 @@ flutter run
 You can download and test the latest available Android APK directly:
 
 <p align="center">
-  <a href="https://github.com/haneenmo28/GlucoTrack/releases/download/v1.0.0-beta/app-release.apk">
+  <a href="https://github.com/haneenmo28/GlucoTrack/releases/download/v1.0.0-beta/GlucoTrack.apk">
     <img src="https://img.shields.io/badge/Download%20GlucoTrack%20APK-brightgreen?style=for-the-badge&logo=android" alt="Download GlucoTrack APK" />
   </a>
 </p>
