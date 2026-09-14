@@ -1,4 +1,4 @@
-# 🩸 GlucoTrack — Diabetes Self-Management App
+#  GlucoTrack — Diabetes Self-Management App 🩸
 
 <p align="center">
   <a href="https://github.com/haneenmo28/GlucoTrack/releases/download/v1.0.0-beta/app-release.apk">
